@@ -36,7 +36,7 @@ def call_graph_dataset(num_files=1):
     graph_list = []
     for f in files[:num_files]:
         graphs = c.read_result_object(f.path) # [tracedataList, edgeList, edgefeatures]
-        for g in graphs:
+        for g in graphs[:5000]:
             # convert to pyg graph
             pyg_graph = to_pyg_graph(g)
             graph_list.append(pyg_graph)
