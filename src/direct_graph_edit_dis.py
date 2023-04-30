@@ -1,4 +1,6 @@
-import graphsim as gs
+# import graphsim as gs
+# https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.similarity.graph_edit_distance.html
+# nx function might not fit directed graphs
 import networkx as nx
 
 # Create directed graphs using NetworkX
