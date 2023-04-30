@@ -12,17 +12,18 @@ def to_pyg_graph(graph):
     args:
         graph : a call graph object, with the following attributes:
             - graph.edgelist: a list of edges, each edge is a tuple of two nodes
-            - graph.node_features
+            - graph.nodefeatures: microservice index within the whole trace dataset
             - graph.trace
     """
     # Convert to tensors
     edge_index = torch.tensor(graph.edgelist, dtype=torch.long).t().contiguous()
-    node_features = torch.tensor(graph.node_features, dtype=torch.float32).view(-1, 1)
+    node_features = torch.tensor(graph.nodefeatures, dtype=torch.float32).view(-1, 1)
 
     # Create a PyG graph with edge_index and edge_attr
     graph = Data(node_features=node_features, edge_index=edge_index)
+    return graph
 
-def load_call_graph(num_files=1):
+def call_graph_dataset(num_files=1):
     """
     Load call graphs from pkl files as a list of pyg graphs
     args:
@@ -47,15 +48,16 @@ def main():
 
     # loop over each pkl file as graphs
     num_files = 1
-    services = defaultdict(list)
     
     for f in files[:num_files]:
+        print(f"Reading graphs from {f.name}")
         graphs = c.read_result_object(f.path) # [tracedataList, edgeList, edgefeatures]
         print(type(graphs))
         print(len(graphs))
 
         # read graphs[0]
         graph = graphs[0]
+        print(f"Reading first graph, with {len(graph.nodefeatures)} nodes and {len(graph.edgelist)} edges")
         print(type(graph))
         print(graph)
         print(graph.edgelist)

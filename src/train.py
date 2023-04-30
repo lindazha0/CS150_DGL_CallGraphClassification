@@ -4,7 +4,8 @@ import torch
 import copy
 
 from model import GNN
-from sklearn.model_selection import train_test_split, mean_squared_error
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_squared_error
 from direct_graph_edit_dis import graph_edit_distance
 from earth_move_dis import wasserstein_distance
 
@@ -64,14 +65,14 @@ def train(trainset):
         trainset: a dataset
     """
     # split the dataset into training and validation sets
-    model = GNN(num_features=trainset.num_features, 
-            out_dim=trainset.num_classes, 
+    model = GNN(num_features=1, 
+            out_dim=20, 
             hid_dim=64, 
             num_layers=4, layer_type='GCNConv')
     trainset, valset = train_test_split(trainset, test_size=0.2)
 
-    # NOTE: please use a loalder to form training batches
-    train_loader = DataLoader(trainset, batch_size=4, shuffle=True)
+    # use a loalder to form training batches
+    train_loader = DataLoader(trainset, batch_size=32, shuffle=False)
 
     # training loop to train a model 
     min_val_err = 100
