@@ -1,7 +1,7 @@
 # https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.wasserstein_distance.html
 from scipy.stats import wasserstein_distance
 
-def wasserstein_distance(V1, V2):
+def emd_distance(V1, V2):
     return wasserstein_distance(V1, V2)
 
 def main():

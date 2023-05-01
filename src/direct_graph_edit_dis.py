@@ -14,8 +14,7 @@ def custom_node_match(node1, node2):
     # print(f"node1: {node1}")
     feature1 = node1['x']
     feature2 = node2['x']
-    
-    # You can define any condition to compare the features, here's an example:
+
     return np.isclose(feature1, feature2, atol=0.1)
 
 def graph_edit_distance(G1, G2):
@@ -24,9 +23,11 @@ def graph_edit_distance(G1, G2):
     args:
         G1, G2: two graphs in the form of pyg Data
     """
-    G1 = to_networkx(G1, node_attrs = ['x'], to_undirected=False)
-    G2 = to_networkx(G2, node_attrs = ['x'], to_undirected=False)
-    return nx.graph_edit_distance(G1, G2, node_match=custom_node_match)
+    nx_G1 = to_networkx(G1, node_attrs = ['x'], to_undirected=False)
+    nx_G2 = to_networkx(G2, node_attrs = ['x'], to_undirected=False)
+    print(f"calculate dist for graphs with {nx_G1.number_of_nodes()} and {nx_G2.number_of_nodes()} nodes")
+
+    return nx.graph_edit_distance(nx_G1, nx_G2, node_match=custom_node_match)
 
 def main():
     # Create directed graphs using NetworkX

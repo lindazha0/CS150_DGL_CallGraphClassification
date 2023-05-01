@@ -23,7 +23,7 @@ def to_pyg_graph(graph):
     graph = Data(x=node_features, edge_index=edge_list)
     return graph
 
-def call_graph_dataset(num_files=1):
+def call_graph_dataset(num_files=1, num_graphs=1000):
     """
     Load call graphs from pkl files as a list of pyg graphs
     args:
@@ -36,7 +36,7 @@ def call_graph_dataset(num_files=1):
     graph_list = []
     for f in files[:num_files]:
         graphs = c.read_result_object(f.path) # [tracedataList, edgeList, edgefeatures]
-        for g in graphs[:5000]:
+        for g in graphs[:num_graphs]:
             # convert to pyg graph
             pyg_graph = to_pyg_graph(g)
             graph_list.append(pyg_graph)
