@@ -5,26 +5,30 @@ import numpy as np
 import pickle
 from CallGraphDataset import CallGraphDataset
 import os
+import torch
 
-DATASET = "smallDataset.pkl"
+DATASET_NAME = "smallDataset.pkl"
+MODEL_NAME = "smallModel.pt"
+
+DATA_PATH = "../data/preloaded/"
+MODEL_PATH = "../models/"
 
 def main():
     # load the dataset
-    PATH = "../data/preloaded/"
-    DATA_PATH = os.path.join(PATH, DATASET)
-    if not os.path.exists(DATA_PATH):
+    DATASET = os.path.join(DATA_PATH, DATASET_NAME)
+    if not os.path.exists(DATASET):
         print(f"{DATASET} not loaded, loading from preprocessed call graphs...")
         try:
             dataset = CallGraphDataset()
         except:
             print("Failed to load the dataset")
             return
-        with open(DATA_PATH, "wb") as f:
+        with open(DATASET, "wb") as f:
             pickle.dump(dataset, f)
         print(f"{DATASET} saved")
     else:
         print(f"{DATASET} loaded")
-        with open(DATA_PATH, "rb") as f:
+        with open(DATASET, "rb") as f:
             dataset = pickle.load(f)
 
     # split the dataset into trainset and testset
@@ -33,19 +37,24 @@ def main():
 
     # learn an optimal model
     print("...Training...")
-    model = train(trainset)
+    model, val_err = train(trainset)
 
     # bellow call model is called to predict test labels 
     print("...Testing...")
-    model.eval()
-    test_loader = DataLoader(testset, batch_size=32, shuffle=False)
+    # model.eval()
+    # test_loader = DataLoader(testset, batch_size=32, shuffle=False)
     # for batch in test_loader:
-    #     pred = model(batch.x, batch.edge_index, batch.batch)
+    #     embeddings = model(batch.x, batch.edge_index, batch.batch)
+    #     ground_truth = graph_similarities(batch.to_data_list())
+    #     similar_mat = embedding_similarities(embeddings)
+    #     err = mean_squared_error(similar_mat, ground_truth)
 
-    # # Save predictions to the .txt file
-    # save_file = "gnn_predictions.txt"
-    # print("%d model predictions saved to %s" % (pred.shape[0], save_file))
-    # np.savetxt(save_file, pred)
+    # Save predictions to the .txt file
+    MODEL = os.path.join(MODEL_PATH, MODEL_NAME)
+    if not os.path.exists(MODEL):
+        print(f"{MODEL} not exists, saving model...")
+        torch.save(model.state_dict(), MODEL)
+        print(f"{MODEL} saved")
 
 if __name__ == "__main__":
     main()

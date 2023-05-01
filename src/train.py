@@ -77,9 +77,9 @@ def train(trainset):
     # training loop to train a model 
     min_val_err = 100
     best_model = None
-    epochs = 100
+    epochs = 50
     criterion = torch.nn.MSELoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.1)
 
     # train the model
     for epoch in range(epochs):
@@ -108,5 +108,5 @@ def train(trainset):
             best_model = copy.deepcopy(model)
     print('Minimal validation error: {:.5f}'.format(min_val_err))
 
-    return best_model
+    return best_model, min_val_err
 
