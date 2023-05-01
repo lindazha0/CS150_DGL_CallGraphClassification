@@ -3,8 +3,8 @@ import misc as c
 import collect_traces as ct
 from collections import defaultdict, namedtuple, Counter
 
+# for constructing the call graph from pkl files under data/graphs_v2
 CallGraph = namedtuple('CallGraph', ['trace', 'edgelist', 'nodefeatures'])
-
 
 def no_ms_preprocess(trace):
     trace = ct.rmv_dups(c.make_hierarchy(trace))

@@ -1,7 +1,7 @@
 from torch_geometric.data import InMemoryDataset
 from load_call_graph import call_graph_dataset
 
-
+# for constructing the call graph dataset
 class CallGraphDataset(InMemoryDataset):
     def __init__(self, file_num=1, root=None, transform=None, pre_transform=None):
         super(CallGraphDataset, self).__init__(root, transform, pre_transform)

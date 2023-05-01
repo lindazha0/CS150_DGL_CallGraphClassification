@@ -27,16 +27,19 @@ class GNN(torch.nn.Module):
 
     def forward(self, x, edge_list, batch):
         """
-        Implement the GNN calculation. The output should be logits for graph labels in the batch.
+        Implement the GNN calculation. The output should be graph embeddings for the batch.
 
         args:
             x: a Tensor of shape [n, num_features], node features
             edge_list: a Tensor of shape [2, num_edges], each column is a tuple contains a pair `(sender, receiver)`. Here `sender` and `receiver`
             batch: the indicator vector indicating different graphs    
         """
-
-        # GNN: node embedding
-        x = self.conv1(x, edge_list)
+        try:
+            x = self.conv1(x, edge_list)
+        except:
+            print(f"Error in GNN.forward() with x.shape={x.shape} and edge_list.shape={edge_list.shape}")
+            raise ValueError
+        
         x = x.relu()
         x = F.dropout(x, p=0.5, training=self.training)
 
