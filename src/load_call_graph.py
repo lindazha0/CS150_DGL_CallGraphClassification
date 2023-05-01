@@ -16,11 +16,11 @@ def to_pyg_graph(graph):
             - graph.trace
     """
     # Convert to tensors
-    edge_index = torch.tensor(graph.edgelist, dtype=torch.long).t().contiguous()
-    node_features = torch.tensor(graph.nodefeatures, dtype=torch.float32).view(-1, 1)
+    node_features = torch.tensor(graph.nodefeatures, dtype=torch.float).view(-1, 1) # Reshape to (num_nodes, 1)
+    edge_list = torch.tensor(graph.edgelist, dtype=torch.long).view(2, -1) # Reshape to (2, num_edges)
 
     # Create a PyG graph with edge_index and edge_attr
-    graph = Data(node_features=node_features, edge_index=edge_index)
+    graph = Data(x=node_features, edge_index=edge_list)
     return graph
 
 def call_graph_dataset(num_files=1):

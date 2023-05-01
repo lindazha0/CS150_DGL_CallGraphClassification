@@ -14,7 +14,11 @@ def main():
     DATA_PATH = os.path.join(PATH, DATASET)
     if not os.path.exists(DATA_PATH):
         print(f"{DATASET} not loaded, loading from preprocessed call graphs...")
-        dataset = CallGraphDataset()
+        try:
+            dataset = CallGraphDataset()
+        except:
+            print("Failed to load the dataset")
+            return
         with open(DATA_PATH, "wb") as f:
             pickle.dump(dataset, f)
         print(f"{DATASET} saved")
@@ -35,8 +39,8 @@ def main():
     print("...Testing...")
     model.eval()
     test_loader = DataLoader(testset, batch_size=32, shuffle=False)
-    for batch in test_loader:
-        pred = model(batch.x, batch.edge_index, batch.batch).argmax(dim=1)
+    # for batch in test_loader:
+    #     pred = model(batch.x, batch.edge_index, batch.batch)
 
     # # Save predictions to the .txt file
     # save_file = "gnn_predictions.txt"
