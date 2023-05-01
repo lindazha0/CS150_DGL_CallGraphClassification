@@ -1,9 +1,8 @@
-import numpy as np
-from torch_geometric.loader import DataLoader
 import torch
 import copy
 
-from model import GNN
+import numpy as np
+from torch_geometric.loader import DataLoader
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error
 from direct_graph_edit_dis import graph_edit_distance
@@ -59,7 +58,7 @@ def validate(model, testset):
 
     return err
 
-def train(trainset):
+def train(trainset, model):
     """
     A training function that trains a GNN model 
 
@@ -67,10 +66,6 @@ def train(trainset):
         trainset: a dataset
     """
     # split the dataset into training and validation sets
-    model = GNN(num_features=1, 
-            out_dim=20, 
-            hid_dim=64, 
-            num_layers=5, layer_type='GCNConv')
     trainset, valset = train_test_split(trainset, test_size=0.2)
 
     # use a loalder to form training batches

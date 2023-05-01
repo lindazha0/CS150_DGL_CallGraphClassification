@@ -6,6 +6,7 @@ from sklearn.model_selection import train_test_split
 from torch_geometric.loader import DataLoader
 from train import train, graph_similarities, embedding_similarities
 from sklearn.metrics import f1_score
+from model import GNN
 
 
 DATASET_NAME = "1kDataset.pkl"
@@ -36,11 +37,20 @@ def main():
     trainset, testset = train_test_split(dataset, train_size=0.8)
     print(f"Total dataset size: {len(dataset)},\ntrainset size: {len(trainset)},\ntestset size: {len(testset)}")
 
-    # learn an optimal model
-    print("...Training...")
-    model, val_err = train(trainset)
+    # load or learn an optimal model
+    model = GNN(num_features=1, 
+            out_dim=20, 
+            hid_dim=64, 
+            num_layers=5, layer_type='GCNConv')
+    MODEL = os.path.join(MODEL_PATH, MODEL_NAME)
+    if os.path.exists(MODEL):
+        print(f"{MODEL} existed, loading model...")
+        model.load_state_dict(torch.load(MODEL))
+    else:
+        print("...Training...")
+        model, val_err = train(trainset, model)
 
-    # bellow call model is called to predict test labels 
+    # call model to predict test labels 
     print("...Testing...")
     model.eval()
     similarity_threshold = 0.8
@@ -55,14 +65,13 @@ def main():
         ground_truth_labels = (ground_truth >= similarity_threshold).astype(int)
         predicted_labels = (similar_mat >= similarity_threshold).astype(int)
 
-        # Calculate the F1 score
+        # Calculate the F1 score as a evaluation metric
         scores.append(f1_score(ground_truth_labels.flatten(), predicted_labels.flatten()))
     print(f"F1 score for testing: {np.mean(scores)}")
 
     # Save predictions to the .txt file
-    MODEL = os.path.join(MODEL_PATH, MODEL_NAME)
     if not os.path.exists(MODEL):
-        print(f"{MODEL} not existed, saving model...")
+        print(f"saving model...")
         torch.save(model.state_dict(), MODEL)
         print(f"{MODEL} saved")
 
