@@ -1,12 +1,11 @@
 import torch
 import copy
 
-import numpy as np
 from torch_geometric.loader import DataLoader
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error
 from direct_graph_edit_dis import graph_edit_distance
-from earth_move_dis import emd_distance
+from earth_move_dis import sliced_wasserstein_distance
 
 def graph_similarities(graphs):
     """
@@ -35,8 +34,13 @@ def embedding_similarities(embeddings):
         for j in range(len(embeddings)):
             if i == j:
                 continue
-            res.append(emd_distance(embeddings[i].detach().numpy(), embeddings[j].detach().numpy()))
-    return torch.tensor(res)
+            # calculate the EMD between two embeddings and add a dimension for concatenation
+            dist = sliced_wasserstein_distance(embeddings[i], embeddings[j]).unsqueeze(0)
+            # print(f"Embedding {i} and Embedding {j} have EMD {dist}")
+            res.append(dist)
+    # print(f"res: {res}")
+    return torch.cat(res, dim=0)
+    # return torch.as_tensor(res)
 
 def validate(model, testset):
     """
@@ -45,7 +49,6 @@ def validate(model, testset):
         model: a GNN object 
         testset: a dataset
     """
-
     # set the model to the evaluation mode 
     model.eval()
 
@@ -90,13 +93,14 @@ def train(trainset, model):
             embeddings = model(batch.x, batch.edge_index, batch.batch)
             print(f"embeddings: {embeddings.shape}")
             similar_mat = embedding_similarities(embeddings)
-            print(f"embeddings similarities: {similar_mat.shape}")
+            print(f"embeddings similarities: {similar_mat.shape}, {similar_mat.dtype}")
             ground_truth = graph_similarities(batch.to_data_list())
-            print(f"ground truth similarities: {ground_truth.shape}")
+            print(f"ground truth similarities: {ground_truth.shape}, {ground_truth.dtype}")
 
             # gradient descent
             loss = criterion(similar_mat, ground_truth)
             print(f"loss: {loss}")
+            print(model.parameters().shape, model.parameters().dtype)
             loss.backward()
             optimizer.step()
         # print the loss

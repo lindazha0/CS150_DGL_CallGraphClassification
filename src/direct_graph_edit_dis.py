@@ -42,7 +42,7 @@ def main():
     # Compute graph edit distance
     print("Graph 1:", G1.nodes.data())
     ged = nx.graph_edit_distance(G1, G2, node_match=custom_node_match)
-    print("Graph Edit Distance:", ged)
+    print("Graph Edit Distance:", ged, "of type", type(ged))
 
 if __name__ == "__main__":
     main()
