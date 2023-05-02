@@ -10,18 +10,29 @@ from model import GNN
 
 
 DATASET_NAME = "1kDataset.pkl"
+TRAINSET_NAME = "1kTrainset.pkl"
+TESTSET_NAME = "1kTestset.pkl"
 MODEL_NAME = "1kModel.pt"
 
 DATA_PATH = "../data/preloaded/"
 MODEL_PATH = "../models/"
 
-def main():
-    # load the dataset
+
+
+def load_dataset(num_files=1, num_graphs=1000):
+    """
+    Load the dataset from the preprocessed files
+    args:
+        file_num: the number of files to load
+        num_graphs: the number of graphs to load from each file
+    """
     DATASET = os.path.join(DATA_PATH, DATASET_NAME)
+    TRAINSET = os.path.join(DATA_PATH, TRAINSET_NAME)
+    TESTSET = os.path.join(DATA_PATH, TESTSET_NAME)
     if not os.path.exists(DATASET):
         print(f"{DATASET} not existed, constructing from preprocessed call graphs...")
         try:
-            dataset = CallGraphDataset(1, 1000) # 1 file, 1000 graphs
+            dataset = CallGraphDataset(num_files, num_graphs) # 1 file, 1000 graphs
         except:
             print("Failed to load the dataset")
             return
@@ -35,7 +46,36 @@ def main():
 
     # split the dataset into trainset and testset
     trainset, testset = train_test_split(dataset, train_size=0.8)
-    print(f"Total dataset size: {len(dataset)},\ntrainset size: {len(trainset)},\ntestset size: {len(testset)}")
+    with open(TRAINSET, "wb") as f:
+        pickle.dump(trainset, f)
+    with open(TESTSET, "wb") as f:
+        pickle.dump(testset, f)
+
+    return train_test_split(dataset, train_size=0.8)
+
+def load_train_test_set():
+    """
+    Load the trainset and testset from the preprocessed files
+    """
+    TRAINSET = os.path.join(DATA_PATH, TRAINSET_NAME)
+    TESTSET = os.path.join(DATA_PATH, TESTSET_NAME)
+
+    if not os.path.exists(TRAINSET) or not os.path.exists(TESTSET):
+        print(f"{TRAINSET} not existed, loading dataset...")
+        return load_dataset()
+    else:
+        print(f"{TRAINSET} loaded")
+        with open(TRAINSET, "rb") as f:
+            trainset = pickle.load(f)
+        with open(TESTSET, "rb") as f:
+            testset = pickle.load(f)
+        return trainset, testset
+
+
+def main():
+    # load the dataset
+    trainset, testset = load_train_test_set()
+    print(f"trainset size: {len(trainset)},\ntestset size: {len(testset)}")
 
     # load or learn an optimal model
     model = GNN(num_features=1, 

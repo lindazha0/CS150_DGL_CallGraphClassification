@@ -17,5 +17,5 @@
 conda activate cs150
 
 # run python
-python experiments.py 
+python generate_labels.py 
 # make sure myscript.py exists in the current directory or provide thefull path to script

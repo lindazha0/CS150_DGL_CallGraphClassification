@@ -21,7 +21,7 @@ def graph_similarities(graphs):
             dist = graph_edit_distance(graphs[i], graphs[j])
             print(f"Graph {i} and Graph {j} have edit distance {dist}")
             res.append(dist)
-    return torch.tensor(res)
+    return torch.tensor(res, dtype = torch.float32)
 
 def embedding_similarities(embeddings):
     """
@@ -100,10 +100,17 @@ def train(trainset, model):
             # gradient descent
             loss = criterion(similar_mat, ground_truth)
             print(f"loss: {loss}")
-            print(model.parameters().shape, model.parameters().dtype)
+
+            # debugging: find the anomalous double dtype
+            # for name, param in model.named_parameters():
+            #    print(f"param {name}:\t{param.dtype}")
+            # for name, buffer in model.named_buffers():
+            #     print(f"buffer {name}:\t{buffer.dtype}")
+            # with torch.autograd.detect_anomaly():
             loss.backward()
             optimizer.step()
-        # print the loss
+
+        # print the loss for each epoch
         print('Epoch: {:03d}, Loss: {:.5f}'.format(epoch, loss.item()))
 
         # validate the model
