@@ -67,6 +67,7 @@ def load_train_test_set():
         print(f"{TRAINSET} loaded")
         with open(TRAINSET, "rb") as f:
             trainset = pickle.load(f)
+        print(f"{TESTSET} loaded")
         with open(TESTSET, "rb") as f:
             testset = pickle.load(f)
         return trainset, testset
