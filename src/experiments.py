@@ -7,19 +7,20 @@ from torch_geometric.loader import DataLoader
 from train import train, graph_similarities, embedding_similarities
 from sklearn.metrics import f1_score
 from model import GNN
+from generate_labels import load_train_test_labels
 
 
-DATASET_NAME = "1kDataset.pkl"
-TRAINSET_NAME = "1kTrainset.pkl"
-TESTSET_NAME = "1kTestset.pkl"
-MODEL_NAME = "1kModel.pt"
+DATASET_NAME = "10Dataset.pkl"
+TRAINSET_NAME = "10Trainset.pkl"
+TESTSET_NAME = "10Testset.pkl"
+MODEL_NAME = "10Model.pt"
 
 DATA_PATH = "../data/preloaded/"
 MODEL_PATH = "../models/"
 
 
 
-def load_dataset(num_files=1, num_graphs=1000):
+def load_dataset(num_files=1, num_graphs=10):
     """
     Load the dataset from the preprocessed files
     args:
@@ -33,9 +34,9 @@ def load_dataset(num_files=1, num_graphs=1000):
         print(f"{DATASET} not existed, constructing from preprocessed call graphs...")
         try:
             dataset = CallGraphDataset(num_files, num_graphs) # 1 file, 1000 graphs
-        except:
+        except Exception:
             print("Failed to load the dataset")
-            return
+            raise Exception
         with open(DATASET, "wb") as f:
             pickle.dump(dataset, f)
         print(f"{DATASET} saved")
@@ -51,7 +52,7 @@ def load_dataset(num_files=1, num_graphs=1000):
     with open(TESTSET, "wb") as f:
         pickle.dump(testset, f)
 
-    return train_test_split(dataset, train_size=0.8)
+    return trainset, testset
 
 def load_train_test_set():
     """
@@ -76,6 +77,7 @@ def load_train_test_set():
 def main():
     # load the dataset
     trainset, testset = load_train_test_set()
+    train_y, test_y = load_train_test_labels()
     print(f"trainset size: {len(trainset)},\ntestset size: {len(testset)}")
 
     # load or learn an optimal model

@@ -2,10 +2,22 @@ import torch, os
 import experiments as exp
 from direct_graph_edit_dis import graph_edit_distance
 
-TRAIN_LABELS = "1kTrainLabels.pt"
-TEST_LABELS = "1kTestLabels.pt"
+TRAIN_LABELS = "10TrainLabels.pt"
+TEST_LABELS = "10TestLabels.pt"
+
+def load_train_test_labels():
+    """
+    Load the trainset and testset from the preprocessed files
+    """
+    if not os.path.exists(os.path.join(exp.DATA_DIR, TRAIN_LABELS)):
+        print(f"{TRAIN_LABELS} not existed, generating...")
+        main()
+    train_labels = torch.load(os.path.join(exp.DATA_DIR, TRAIN_LABELS))
+    test_labels = torch.load(os.path.join(exp.DATA_DIR, TEST_LABELS))
+    return train_labels, test_labels
 
 def main():
+    print("Loading dataset...")
     trainset, testset = exp.load_train_test_set()
     train_len, test_len = len(trainset) // 2, len(testset) // 2
     print(type(trainset), type(testset), type(trainset[0]))

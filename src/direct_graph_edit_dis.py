@@ -37,7 +37,7 @@ def graph_edit_distance(G1, G2):
     # record time elapsed
     elapsed = time.time() - begin
     elapsed_format =  time.strftime("%Hh%Mm%Ss", time.gmtime(elapsed))
-    with open('times_for_GED.csv', 'a', encoding='UTF8', newline='') as f:
+    with open('times_for_GED_preempt_10.csv', 'a', encoding='UTF8', newline='') as f:
         writer = csv.writer(f)
         writer.writerow([nx_G1.number_of_nodes(), nx_G2.number_of_nodes(),elapsed, elapsed_format])
     print(f"Time elapsed: {elapsed_format}")

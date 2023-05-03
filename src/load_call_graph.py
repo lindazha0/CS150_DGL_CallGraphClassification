@@ -37,6 +37,7 @@ def call_graph_dataset(num_files=1, num_graphs=1000):
     for f in files[:num_files]:
         graphs = c.read_result_object(f.path) # [tracedataList, edgeList, edgefeatures]
         for g in graphs[:num_graphs]:
+            # print(f"Reading graph with {len(g.nodefeatures)} nodes and {len(g.edgelist)} edges")
             # convert to pyg graph
             pyg_graph = to_pyg_graph(g)
             graph_list.append(pyg_graph)

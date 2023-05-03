@@ -1,10 +1,8 @@
 #!/bin/sh
 #SBATCH -J exp_1k          #job name
 #SBATCH --time=02-00:20:00      #requested time (DD-HH:MM:SS)
-#SBATCH -p lab-test             #running on "mpi" partition/queue
-#SBATCH -N 32                   #nodes/cpu cores
-#SBATCH -n 1                    #2 tasks total
-#SBATCH -c 32                   #1 cpu cores per task
+#SBATCH -p preempt             #running on "mpi" partition/queue
+## SBATCH -N 32                   #nodes/cpu cores
 #SBATCH --mem=8g                        #requesting RAM total
 #SBATCH --output=exp_1k.%j.%N.out  #saving standard output to file, %j=JOBID, %N=NodeName
 #SBATCH --error=exp_1k.%j.%N.err   #saving standard error to file, %j=JOBID, %N=NodeName
@@ -21,4 +19,5 @@
 
 # run python
 python generate_labels.py 
+# python -c "import time; time.sleep(120)"
 # make sure myscript.py exists in the current directory or provide thefull path to script
