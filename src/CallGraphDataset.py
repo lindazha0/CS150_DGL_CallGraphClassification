@@ -1,5 +1,7 @@
-from torch_geometric.data import InMemoryDataset, Dataset
+from torch_geometric.data import InMemoryDataset, Dataset, Batch
 from load_call_graph import call_graph_dataset
+import torch
+
 
 # for constructing the call graph dataset
 class CallGraphDataset(InMemoryDataset):
@@ -28,6 +30,12 @@ class CallGraphPairDataset(Dataset):
         graph2 = self.graph_data[index * 2 + 1]
         similarity_score = self.similarity_scores[index]
         return graph1, graph2, similarity_score
+    
+# Define a custom collate function to batch the PyG Data objects
+def collate_fn(data_list):
+    batch = Batch.from_data_list(data_list)
+    similarity_scores = torch.stack([d[1] for d in data_list])
+    return batch, similarity_scores
 
 # Example usage
 # dataset = GraphPairDataset(graph_data, similarity_scores)
