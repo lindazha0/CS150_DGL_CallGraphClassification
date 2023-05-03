@@ -2,18 +2,16 @@ import torch, os
 import experiments as exp
 from direct_graph_edit_dis import graph_edit_distance
 
-TRAIN_LABELS = "10TrainLabels.pt"
-TEST_LABELS = "10TestLabels.pt"
 
 def load_train_test_labels():
     """
     Load the trainset and testset from the preprocessed files
     """
-    if not os.path.exists(os.path.join(exp.DATA_DIR, TRAIN_LABELS)):
-        print(f"{TRAIN_LABELS} not existed, generating...")
+    if not os.path.exists(os.path.join(exp.DATA_DIR, exp.TRAIN_LABELS)):
+        print(f"{exp.TRAIN_LABELS} not existed, generating...")
         main()
-    train_labels = torch.load(os.path.join(exp.DATA_DIR, TRAIN_LABELS))
-    test_labels = torch.load(os.path.join(exp.DATA_DIR, TEST_LABELS))
+    train_labels = torch.load(os.path.join(exp.DATA_DIR, exp.TRAIN_LABELS))
+    test_labels = torch.load(os.path.join(exp.DATA_DIR, exp.TEST_LABELS))
     return train_labels, test_labels
 
 def main():
@@ -31,7 +29,7 @@ def main():
         dist = graph_edit_distance(g1, g2)
         print(f"Graph {g1} and Graph {g2} have edit distance {dist}")
         train_labels.append(dist)
-    torch.save(torch.tensor(train_labels, dtype=torch.float32), os.path.join(exp.DATA_DIR, TRAIN_LABELS))
+    torch.save(torch.tensor(train_labels, dtype=torch.float32), os.path.join(exp.DATA_DIR, exp.TRAIN_LABELS))
 
     # calculate graph edit distance for testset
     test_labels = []
@@ -41,7 +39,7 @@ def main():
         dist = graph_edit_distance(g1, g2)
         print(f"Graph {g1} and Graph {g2} have edit distance {dist}")
         test_labels.append(dist)
-    torch.save(torch.tensor(test_labels, dtype=torch.float32), os.path.join(exp.DATA_DIR, TEST_LABELS))
+    torch.save(torch.tensor(test_labels, dtype=torch.float32), os.path.join(exp.DATA_DIR, exp.TEST_LABELS))
 
 if __name__ == "__main__":
     main()

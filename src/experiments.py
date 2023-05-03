@@ -11,11 +11,15 @@ from generate_labels import load_train_test_labels
 
 
 DATASET_NAME = "10Dataset.pkl"
+
 TRAINSET_NAME = "10Trainset.pkl"
 TESTSET_NAME = "10Testset.pkl"
+TRAIN_LABELS = "10TrainLabels.pt"
+TEST_LABELS = "10TestLabels.pt"
+
 MODEL_NAME = "10Model.pt"
 
-DATA_PATH = "../data/preloaded/"
+DATA_DIR = "../data/preloaded/"
 MODEL_PATH = "../models/"
 
 
@@ -27,9 +31,9 @@ def load_dataset(num_files=1, num_graphs=10):
         file_num: the number of files to load
         num_graphs: the number of graphs to load from each file
     """
-    DATASET = os.path.join(DATA_PATH, DATASET_NAME)
-    TRAINSET = os.path.join(DATA_PATH, TRAINSET_NAME)
-    TESTSET = os.path.join(DATA_PATH, TESTSET_NAME)
+    DATASET = os.path.join(DATA_DIR, DATASET_NAME)
+    TRAINSET = os.path.join(DATA_DIR, TRAINSET_NAME)
+    TESTSET = os.path.join(DATA_DIR, TESTSET_NAME)
     if not os.path.exists(DATASET):
         print(f"{DATASET} not existed, constructing from preprocessed call graphs...")
         try:
@@ -58,8 +62,8 @@ def load_train_test_set():
     """
     Load the trainset and testset from the preprocessed files
     """
-    TRAINSET = os.path.join(DATA_PATH, TRAINSET_NAME)
-    TESTSET = os.path.join(DATA_PATH, TESTSET_NAME)
+    TRAINSET = os.path.join(DATA_DIR, TRAINSET_NAME)
+    TESTSET = os.path.join(DATA_DIR, TESTSET_NAME)
 
     if not os.path.exists(TRAINSET) or not os.path.exists(TESTSET):
         print(f"{TRAINSET} not existed, loading dataset...")
