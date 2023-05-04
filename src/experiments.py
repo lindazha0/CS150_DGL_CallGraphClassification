@@ -3,8 +3,7 @@ import os, torch, pickle
 import numpy as np
 from CallGraphDataset import CallGraphDataset
 from sklearn.model_selection import train_test_split
-from torch_geometric.loader import DataLoader
-from train import train, graph_similarities, sliced_wasserstein_distance, VALID_THRESHOLD
+from train import train, sliced_wasserstein_distance, VALID_THRESHOLD
 from sklearn.metrics import f1_score
 from model import GNN
 
@@ -120,9 +119,7 @@ def main():
     # call model to predict test labels 
     print("...Testing...")
     model.eval()
-    # test_loader = DataLoader(testset, batch_size=32, shuffle=False)
     scores = []
-    # test_loader = DataLoader(testset, batch_size=len(testset), shuffle=False)
     for i in range(len(test_y)):
         ground_truth = test_y[i]
         if ground_truth <= 0:

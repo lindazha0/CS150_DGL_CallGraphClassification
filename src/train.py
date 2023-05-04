@@ -41,9 +41,7 @@ def embedding_similarities(embeddings):
             dist = sliced_wasserstein_distance(embeddings[i], embeddings[j]).unsqueeze(0)
             # print(f"Embedding {i} and Embedding {j} have EMD {dist}")
             res.append(dist)
-    # print(f"res: {res}")
     return torch.cat(res, dim=0)
-    # return torch.as_tensor(res)
 
 def validate(model, valset, val_labels):
     """
@@ -56,7 +54,6 @@ def validate(model, valset, val_labels):
     model.eval()
 
     res = []
-    # test_loader = DataLoader(testset, batch_size=len(testset), shuffle=False)
     for i in range(len(val_labels)):
         ground_truth = val_labels[i]
         if ground_truth <= 0:
@@ -80,18 +77,13 @@ def train(model, trainset, train_labels):
     # split the dataset into training and validation sets
     trainset, valset = train_test_split(trainset, test_size=0.2, shuffle=False)
     train_y, val_y = train_test_split(train_labels, test_size=0.2, shuffle=False)
-    # train_y, val_y = torch.Tensor(train_y), torch.Tensor(val_y)
-    # print(train_y[0],type(train_y[0]), type(val_y), type(trainset[0]), type(valset))
-
-    # use a loalder to form training batches
-    # train_loader = DataLoader(trainset, batch_size=2, shuffle=False)
 
     # training loop to train a model 
     max_val_acc = 0.0
     best_model = model
-    epochs = 10
+    epochs = 50
     criterion = torch.nn.MSELoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-2)
     print("before training:", model)
 
     # train the model
@@ -117,14 +109,6 @@ def train(model, trainset, train_labels):
 
             # gradient descent
             loss = criterion(similar_of_emb, ground_truth)
-            # print(f"loss: {loss}")
-
-            # debugging: find the anomalous double dtype
-            # for name, param in model.named_parameters():
-            #    print(f"param {name}:\t{param.dtype}")
-            # for name, buffer in model.named_buffers():
-            #     print(f"buffer {name}:\t{buffer.dtype}")
-            # with torch.autograd.detect_anomaly():
             loss.backward()
             optimizer.step()
 
