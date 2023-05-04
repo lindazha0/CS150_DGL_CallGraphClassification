@@ -25,7 +25,7 @@ class GNN(torch.nn.Module):
         ]
         self.fc = Linear(hid_dim, out_dim)
 
-    def forward(self, x, edge_list, batch):
+    def forward(self, x, edge_list, batch=None):
         """
         Implement the GNN calculation. The output should be graph embeddings for the batch.
 

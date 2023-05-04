@@ -1,11 +1,14 @@
 import torch
-import copy
+import copy, os
 
 from torch_geometric.loader import DataLoader
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error
 from direct_graph_edit_dis import graph_edit_distance
 from earth_move_dis import sliced_wasserstein_distance
+
+# the allowed threshold for distance difference between two graphs to be considered similar
+VALID_THRESHOLD = 5
 
 def graph_similarities(graphs):
     """
@@ -42,7 +45,7 @@ def embedding_similarities(embeddings):
     return torch.cat(res, dim=0)
     # return torch.as_tensor(res)
 
-def validate(model, testset):
+def validate(model, valset, val_labels):
     """
     Validate the model by checking its accuracy on the validation set of nodes
     args:
@@ -52,16 +55,22 @@ def validate(model, testset):
     # set the model to the evaluation mode 
     model.eval()
 
-    test_loader = DataLoader(testset, batch_size=len(testset), shuffle=False)
-    for batch in test_loader:
-        embeddings = model(batch.x, batch.edge_index, batch.batch)
-        ground_truth = graph_similarities(batch.to_data_list())
-        similar_mat = embedding_similarities(embeddings)
-        err = mean_squared_error(similar_mat, ground_truth)
+    res = []
+    # test_loader = DataLoader(testset, batch_size=len(testset), shuffle=False)
+    for i in range(len(val_labels)):
+        ground_truth = val_labels[i]
+        if ground_truth <= 0:
+            continue
+        g1, g2 = valset[i*2], valset[i*2+1]
+        embed_g1, embed_g2 = model(g1.x, g1.edge_index), model(g2.x, g2.edge_index)
+        similar_of_emb = sliced_wasserstein_distance(embed_g1, embed_g2)
+        # print(f"vali-{i}: G1 {g1}, G2 {g2}, GED {ground_truth}, EMD {similar_of_emb}")
+        res.append(abs(similar_of_emb - ground_truth) <= VALID_THRESHOLD)
+    accuracy = sum(res) / len(res)
 
-    return err
+    return accuracy
 
-def train(trainset, model):
+def train(model, trainset, train_labels):
     """
     A training function that trains a GNN model 
 
@@ -69,37 +78,46 @@ def train(trainset, model):
         trainset: a dataset
     """
     # split the dataset into training and validation sets
-    trainset, valset = train_test_split(trainset, test_size=0.2)
+    trainset, valset = train_test_split(trainset, test_size=0.2, shuffle=False)
+    train_y, val_y = train_test_split(train_labels, test_size=0.2, shuffle=False)
+    # train_y, val_y = torch.Tensor(train_y), torch.Tensor(val_y)
+    # print(train_y[0],type(train_y[0]), type(val_y), type(trainset[0]), type(valset))
 
     # use a loalder to form training batches
-    train_loader = DataLoader(trainset, batch_size=2, shuffle=False)
+    # train_loader = DataLoader(trainset, batch_size=2, shuffle=False)
 
     # training loop to train a model 
-    min_val_err = 100
-    best_model = None
-    epochs = 50
+    max_val_acc = 0.0
+    best_model = model
+    epochs = 10
     criterion = torch.nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
+    print("before training:", model)
 
     # train the model
     for epoch in range(epochs):
-        for batch in train_loader:
+        # train the model
+        for i in range(len(train_y)):
+            if train_y[i] <= 0:
+                continue
             model.train()
 
             # clear the gradients
             optimizer.zero_grad()
 
             # forward pass
-            embeddings = model(batch.x, batch.edge_index, batch.batch)
-            print(f"embeddings: {embeddings.shape}")
-            similar_mat = embedding_similarities(embeddings)
-            print(f"embeddings similarities: {similar_mat.shape}, {similar_mat.dtype}")
-            ground_truth = graph_similarities(batch.to_data_list())
-            print(f"ground truth similarities: {ground_truth.shape}, {ground_truth.dtype}")
+            g1, g2 = trainset[i], trainset[i+1]
+            embeddings_g1 = model(g1.x, g1.edge_index)
+            embeddings_g2 = model(g2.x, g2.edge_index)
+            # print(f"embeddings: {embeddings_g1.shape}")
+            similar_of_emb = sliced_wasserstein_distance(embeddings_g1, embeddings_g2)
+            # print(f"embeddings similarities: {similar_of_emb}, {similar_of_emb.dtype}")
+            ground_truth = train_y[i]
+            # print(f"ground truth similarities: {ground_truth}, {ground_truth.dtype}")
 
             # gradient descent
-            loss = criterion(similar_mat, ground_truth)
-            print(f"loss: {loss}")
+            loss = criterion(similar_of_emb, ground_truth)
+            # print(f"loss: {loss}")
 
             # debugging: find the anomalous double dtype
             # for name, param in model.named_parameters():
@@ -114,13 +132,15 @@ def train(trainset, model):
         print('Epoch: {:03d}, Loss: {:.5f}'.format(epoch, loss.item()))
 
         # validate the model
-        val_err = validate(model, valset)
+        val_acc = validate(model, valset, val_y)
 
         # save the best model
-        if val_err < min_val_err:
-            min_val_err = val_err
+        if val_acc >= max_val_acc:
+            max_val_acc = val_acc
             best_model = copy.deepcopy(model)
-    print('Minimal validation error: {:.5f}'.format(min_val_err))
+    print('Finished training!')
+    print(f"Best model: {best_model}, is last one: {best_model==model}")
+    print('Best validation accuracy: {:.5f}'.format(max_val_acc))
 
-    return best_model, min_val_err
+    return best_model, max_val_acc
 

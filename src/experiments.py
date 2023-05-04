@@ -4,24 +4,23 @@ import numpy as np
 from CallGraphDataset import CallGraphDataset
 from sklearn.model_selection import train_test_split
 from torch_geometric.loader import DataLoader
-from train import train, graph_similarities, embedding_similarities
+from train import train, graph_similarities, sliced_wasserstein_distance, VALID_THRESHOLD
 from sklearn.metrics import f1_score
 from model import GNN
-from generate_labels import load_train_test_labels
 
-
+TRAIN = True
 DATASET_NAME = "10Dataset.pkl"
 
-TRAINSET_NAME = "10Trainset.pkl"
+TRAINSET_NAME = "1kTrainset.pkl"
 TESTSET_NAME = "10Testset.pkl"
-TRAIN_LABELS = "10TrainLabels.pt"
-TEST_LABELS = "10TestLabels.pt"
+TRAIN_LABELS = "50TrainLabels.pt"
+TEST_LABELS = "50TrainLabels.pt"
+# TEST_LABELS = "10TestLabels.pt"
 
-MODEL_NAME = "10Model.pt"
+MODEL_PT_NAME = "50Model.pt"
 
 DATA_DIR = "../data/preloaded/"
-MODEL_PATH = "../models/"
-
+MODEL_PT_PATH = "../models/"
 
 
 def load_dataset(num_files=1, num_graphs=10):
@@ -77,50 +76,64 @@ def load_train_test_set():
             testset = pickle.load(f)
         return trainset, testset
 
+def load_train_test_labels():
+    """
+    Load the trainset and testset from the preprocessed files
+    """
+    if not os.path.exists(os.path.join(DATA_DIR, TRAIN_LABELS)):
+        print(f"{TRAIN_LABELS} not existed, generating...")
+        main()
+    train_labels = torch.load(os.path.join(DATA_DIR, TRAIN_LABELS))
+    test_labels = torch.load(os.path.join(DATA_DIR, TEST_LABELS))
+    return train_labels, test_labels
 
 def main():
     # load the dataset
     trainset, testset = load_train_test_set()
     train_y, test_y = load_train_test_labels()
+
+    # for unit test of 50 in training set
+    trainset, testset = trainset[:80], trainset[80:100]
+    train_y, test_y = train_y[:40], test_y[40:]
     print(f"trainset size: {len(trainset)},\ntestset size: {len(testset)}")
+    print(f"train_y size: {len(train_y)},\ntest_y size: {len(test_y)}")
 
     # load or learn an optimal model
     model = GNN(num_features=1, 
             out_dim=20, 
             hid_dim=64, 
             num_layers=5, layer_type='GCNConv')
-    MODEL = os.path.join(MODEL_PATH, MODEL_NAME)
-    if os.path.exists(MODEL):
-        print(f"{MODEL} existed, loading model...")
-        model.load_state_dict(torch.load(MODEL))
+    MODEL_PT = os.path.join(MODEL_PT_PATH, MODEL_PT_NAME)
+    if os.path.exists(MODEL_PT) and not TRAIN:
+        print(f"{MODEL_PT} existed, loading model...")
+        model.load_state_dict(torch.load(MODEL_PT))
     else:
         print("...Training...")
-        model, val_err = train(trainset, model)
+        model, val_acc = train(model, trainset, train_y)
 
+        # save best model
+        print(f"saving model...")
+        torch.save(model.state_dict(), MODEL_PT)
+        print(f"{MODEL_PT} saved")
+
+    
     # call model to predict test labels 
     print("...Testing...")
     model.eval()
-    similarity_threshold = 0.8
-    test_loader = DataLoader(testset, batch_size=32, shuffle=False)
+    # test_loader = DataLoader(testset, batch_size=32, shuffle=False)
     scores = []
-    for batch in test_loader:
-        embeddings = model(batch.x, batch.edge_index, batch.batch)
-        ground_truth = graph_similarities(batch.to_data_list())
-        similar_mat = embedding_similarities(embeddings)
-
-        # Convert similarity matrices into binary labels based on the threshold
-        ground_truth_labels = (ground_truth >= similarity_threshold).astype(int)
-        predicted_labels = (similar_mat >= similarity_threshold).astype(int)
-
-        # Calculate the F1 score as a evaluation metric
-        scores.append(f1_score(ground_truth_labels.flatten(), predicted_labels.flatten()))
-    print(f"F1 score for testing: {np.mean(scores)}")
-
-    # Save predictions to the .txt file
-    if not os.path.exists(MODEL):
-        print(f"saving model...")
-        torch.save(model.state_dict(), MODEL)
-        print(f"{MODEL} saved")
+    # test_loader = DataLoader(testset, batch_size=len(testset), shuffle=False)
+    for i in range(len(test_y)):
+        ground_truth = test_y[i]
+        if ground_truth <= 0:
+            continue
+        g1, g2 = testset[i*2], testset[i*2+1]
+        embed_g1, embed_g2 = model(g1.x, g1.edge_index), model(g2.x, g2.edge_index)
+        similar_of_emb = sliced_wasserstein_distance(embed_g1, embed_g2)
+        print(f"vali-{i}: G1 {g1}, G2 {g2}, GED {ground_truth}, EMD {similar_of_emb}")
+        scores.append(abs(similar_of_emb - ground_truth) <= VALID_THRESHOLD)
+    accuracy = sum(scores) / len(scores)
+    print(f"accuracy for testing: {accuracy}")
 
 if __name__ == "__main__":
     main()
