@@ -1,7 +1,7 @@
 import torch
 from torch.nn import Linear,functional as F
 # NOTE: you can import more convolutional and pooling layers here 
-from torch_geometric.nn import SAGEConv, GCNConv, global_mean_pool
+from torch_geometric.nn import SAGEConv, GCNConv, global_mean_pool, GATConv, GATv2Conv
 
 
 # TODO: implement a GNN 

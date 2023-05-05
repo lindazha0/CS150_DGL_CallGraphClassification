@@ -7,7 +7,7 @@ from train import train, sliced_wasserstein_distance, ERR_THRESHOLD
 from sklearn.metrics import f1_score
 from model import GNN
 
-TRAIN = True
+TRAIN = False
 NUM_LABELS = 400 # specify the number of labels to use, as well as the number of graphs to load
 DATASET_NAME = "10Dataset.pkl"
 
@@ -17,7 +17,7 @@ TRAIN_LABELS = "400_TrainLabels.pt"
 # TEST_LABELS = TRAIN_LABELS
 TEST_LABELS = "100_TestLabels.pt"
 
-MODEL_PT_NAME = "500_Model.pt"
+MODEL_PT_NAME = "500_128_GATv2_Model.pt"
 
 DATA_DIR = "../data/preloaded/"
 MODEL_PT_PATH = "../models/"
@@ -104,8 +104,8 @@ def main():
     MODEL_PT = os.path.join(MODEL_PT_PATH, MODEL_PT_NAME)
     model = GNN(num_features=1, 
             out_dim=20, 
-            hid_dim=64, 
-            num_layers=5, layer_type='GCNConv')
+            hid_dim=128, 
+            num_layers=5, layer_type='GATv2Conv')
     if os.path.exists(MODEL_PT):
         print(f"{MODEL_PT} existed, loading model...")
         model.load_state_dict(torch.load(MODEL_PT))
@@ -131,7 +131,7 @@ def main():
         embed_g1, embed_g2 = model(g1.x, g1.edge_index), model(g2.x, g2.edge_index)
         similar_of_emb = sliced_wasserstein_distance(embed_g1, embed_g2)
         error = abs(similar_of_emb - ground_truth)/ground_truth
-        print(f"test-{i}: G1 {g1}, G2 {g2}, GED {ground_truth}, EMD {similar_of_emb}, error {error}")
+        # print(f"test-{i}: G1 {g1}, G2 {g2}, GED {ground_truth}, EMD {similar_of_emb}, error {error}")
         # print(error)
         scores.append(error <= ERR_THRESHOLD)
     accuracy = sum(scores) / len(scores)

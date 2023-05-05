@@ -84,9 +84,9 @@ def train(model, trainset, train_labels):
     # training loop to train a model 
     max_val_acc = 0.0
     best_model = model
-    epochs = 100
+    epochs = 50
     criterion = torch.nn.MSELoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
     print("before training:", model)
 
     # train the model
@@ -101,7 +101,7 @@ def train(model, trainset, train_labels):
             optimizer.zero_grad()
 
             # forward pass
-            g1, g2 = trainset[i], trainset[i+1]
+            g1, g2 = trainset[i*2], trainset[i*2+1]
             embeddings_g1 = model(g1.x, g1.edge_index)
             embeddings_g2 = model(g2.x, g2.edge_index)
             # print(f"embeddings: {embeddings_g1.shape}")
