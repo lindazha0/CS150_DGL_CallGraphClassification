@@ -1,12 +1,12 @@
 #!/bin/sh
-#SBATCH -J exp_10                   #job name
+#SBATCH -J gen_1klabels                   #job name
 #SBATCH --time=02-00:20:00          #requested time (DD-HH:MM:SS)
 #SBATCH -p preempt,batch,largemem   #running on "mpi" partition/queue
 #SBATCH -N 1                        #nodes
-#SBATCH -n 8
+#SBATCH -n 16                       #total tasks across all nodes
 #SBATCH --mem=16g                   #requesting RAM total
-#SBATCH --output=exp_10.%j.%N.out   #saving standard output to file, %j=JOBID, %N=NodeName
-#SBATCH --error=exp_10.%j.%N.err    #saving standard error to file, %j=JOBID, %N=NodeName
+#SBATCH --output=gen_1klabels.%j.%N.out   #saving standard output to file, %j=JOBID, %N=NodeName
+#SBATCH --error=gen_1klabels.%j.%N.err    #saving standard error to file, %j=JOBID, %N=NodeName
 #SBATCH --mail-type=ALL             #email optitions
 #SBATCH --mail-user=czhao07@tufts.edu
 

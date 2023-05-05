@@ -2,9 +2,9 @@ import pandas as pd
 import torch, os
 import experiments as exp
 
-TIME_CSV_PATH = "times_for_GED_sbatch_1k.csv"
+TIME_CSV_PATH = "times_for_GED_sbatch_1kTest.csv"
 DATASET_SIZE = 1000  # process labels for 1k dataset
-GENERATE_LABELS = True
+GENERATE_LABELS = False
 
 # reconstructe labels as pt files from csv
 def main():
@@ -29,15 +29,15 @@ def main():
     # if train labels already existed, skip, otherwise generate
     train_labels_len = min(data.shape[0], train_len)
     train_labels_len = exp.NUM_LABELS if exp.NUM_LABELS > 0 else train_labels_len
-    train_labels_name = str(train_labels_len)+exp.TRAIN_LABELS[3:]
-    if not os.path.exists(os.path.join(exp.DATA_DIR, train_labels_name)):
-        train_labels = []
-        for i in range(train_labels_len):
-            train_labels.append(data["distance"][i])
-        torch.save(torch.tensor(train_labels, dtype=torch.float32), os.path.join(exp.DATA_DIR, train_labels_name))
-        print(f"Saved {train_labels_len} train labels to {train_labels_name}")
-    else:
-        print(f"{train_labels_name} already existed, skip")
+    # train_labels_name = str(train_labels_len)+exp.TRAIN_LABELS[3:]
+    # if not os.path.exists(os.path.join(exp.DATA_DIR, train_labels_name)):
+    #     train_labels = []
+    #     for i in range(train_labels_len):
+    #         train_labels.append(data["distance"][i])
+    #     torch.save(torch.tensor(train_labels, dtype=torch.float32), os.path.join(exp.DATA_DIR, train_labels_name))
+    #     print(f"Saved {train_labels_len} train labels to {train_labels_name}")
+    # else:
+    #     print(f"{train_labels_name} already existed, skip")
     
     # test labels
     if data.shape[0] <= train_len:

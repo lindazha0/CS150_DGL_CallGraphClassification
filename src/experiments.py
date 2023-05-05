@@ -8,16 +8,16 @@ from sklearn.metrics import f1_score
 from model import GNN
 
 TRAIN = True
-NUM_LABELS = 300 # specify the number of labels to use, as well as the number of graphs to load
+NUM_LABELS = 400 # specify the number of labels to use, as well as the number of graphs to load
 DATASET_NAME = "10Dataset.pkl"
 
 TRAINSET_NAME = "1kTrainset.pkl"
 TESTSET_NAME = "1kTestset.pkl"
-TRAIN_LABELS = str(NUM_LABELS)+"TrainLabels.pt"
-TEST_LABELS = TRAIN_LABELS
-# TEST_LABELS = "100_TestLabels.pt"
+TRAIN_LABELS = "400_TrainLabels.pt"
+# TEST_LABELS = TRAIN_LABELS
+TEST_LABELS = "100_TestLabels.pt"
 
-MODEL_PT_NAME = str(NUM_LABELS)+"Model.pt"
+MODEL_PT_NAME = "500_Model.pt"
 
 DATA_DIR = "../data/preloaded/"
 MODEL_PT_PATH = "../models/"
@@ -94,9 +94,9 @@ def main():
     train_y, test_y = load_train_test_labels()
 
     # for unit test of 50 in training set
-    train_size = int(NUM_LABELS*0.8)
-    trainset, testset = trainset[:train_size*2], trainset[train_size*2:NUM_LABELS*2]
-    train_y, test_y = train_y[:train_size], train_y[train_size:]
+    # train_size = int(NUM_LABELS*0.8)
+    # trainset, testset = trainset[:train_size*2], trainset[train_size*2:NUM_LABELS*2]
+    # train_y, test_y = train_y[:train_size], train_y[train_size:]
     print(f"trainset size: {len(trainset)},\ntestset size: {len(testset)}")
     print(f"train_y size: {len(train_y)},\ntest_y size: {len(test_y)}")
 
