@@ -3,20 +3,21 @@ import os, torch, pickle
 import numpy as np
 from CallGraphDataset import CallGraphDataset
 from sklearn.model_selection import train_test_split
-from train import train, sliced_wasserstein_distance, VALID_THRESHOLD
+from train import train, sliced_wasserstein_distance, ERR_THRESHOLD
 from sklearn.metrics import f1_score
 from model import GNN
 
 TRAIN = True
+NUM_LABELS = 300 # specify the number of labels to use, as well as the number of graphs to load
 DATASET_NAME = "10Dataset.pkl"
 
 TRAINSET_NAME = "1kTrainset.pkl"
-TESTSET_NAME = "10Testset.pkl"
-TRAIN_LABELS = "50TrainLabels.pt"
-TEST_LABELS = "50TrainLabels.pt"
-# TEST_LABELS = "10TestLabels.pt"
+TESTSET_NAME = "1kTestset.pkl"
+TRAIN_LABELS = str(NUM_LABELS)+"TrainLabels.pt"
+TEST_LABELS = TRAIN_LABELS
+# TEST_LABELS = "100_TestLabels.pt"
 
-MODEL_PT_NAME = "50Model.pt"
+MODEL_PT_NAME = str(NUM_LABELS)+"Model.pt"
 
 DATA_DIR = "../data/preloaded/"
 MODEL_PT_PATH = "../models/"
@@ -87,26 +88,28 @@ def load_train_test_labels():
     return train_labels, test_labels
 
 def main():
+    torch.set_printoptions(precision=8)
     # load the dataset
     trainset, testset = load_train_test_set()
     train_y, test_y = load_train_test_labels()
 
     # for unit test of 50 in training set
-    trainset, testset = trainset[:80], trainset[80:100]
-    train_y, test_y = train_y[:40], test_y[40:]
+    train_size = int(NUM_LABELS*0.8)
+    trainset, testset = trainset[:train_size*2], trainset[train_size*2:NUM_LABELS*2]
+    train_y, test_y = train_y[:train_size], train_y[train_size:]
     print(f"trainset size: {len(trainset)},\ntestset size: {len(testset)}")
     print(f"train_y size: {len(train_y)},\ntest_y size: {len(test_y)}")
 
     # load or learn an optimal model
+    MODEL_PT = os.path.join(MODEL_PT_PATH, MODEL_PT_NAME)
     model = GNN(num_features=1, 
             out_dim=20, 
             hid_dim=64, 
             num_layers=5, layer_type='GCNConv')
-    MODEL_PT = os.path.join(MODEL_PT_PATH, MODEL_PT_NAME)
-    if os.path.exists(MODEL_PT) and not TRAIN:
+    if os.path.exists(MODEL_PT):
         print(f"{MODEL_PT} existed, loading model...")
         model.load_state_dict(torch.load(MODEL_PT))
-    else:
+    if TRAIN:
         print("...Training...")
         model, val_acc = train(model, trainset, train_y)
 
@@ -127,8 +130,10 @@ def main():
         g1, g2 = testset[i*2], testset[i*2+1]
         embed_g1, embed_g2 = model(g1.x, g1.edge_index), model(g2.x, g2.edge_index)
         similar_of_emb = sliced_wasserstein_distance(embed_g1, embed_g2)
-        print(f"vali-{i}: G1 {g1}, G2 {g2}, GED {ground_truth}, EMD {similar_of_emb}")
-        scores.append(abs(similar_of_emb - ground_truth) <= VALID_THRESHOLD)
+        error = abs(similar_of_emb - ground_truth)/ground_truth
+        print(f"test-{i}: G1 {g1}, G2 {g2}, GED {ground_truth}, EMD {similar_of_emb}, error {error}")
+        # print(error)
+        scores.append(error <= ERR_THRESHOLD)
     accuracy = sum(scores) / len(scores)
     print(f"accuracy for testing: {accuracy}")
 

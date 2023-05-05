@@ -8,7 +8,7 @@ from direct_graph_edit_dis import graph_edit_distance
 from earth_move_dis import sliced_wasserstein_distance
 
 # the allowed threshold for distance difference between two graphs to be considered similar
-VALID_THRESHOLD = 5
+ERR_THRESHOLD = 0.5
 
 def graph_similarities(graphs):
     """
@@ -62,7 +62,10 @@ def validate(model, valset, val_labels):
         embed_g1, embed_g2 = model(g1.x, g1.edge_index), model(g2.x, g2.edge_index)
         similar_of_emb = sliced_wasserstein_distance(embed_g1, embed_g2)
         # print(f"vali-{i}: G1 {g1}, G2 {g2}, GED {ground_truth}, EMD {similar_of_emb}")
-        res.append(abs(similar_of_emb - ground_truth) <= VALID_THRESHOLD)
+        error = abs(similar_of_emb - ground_truth)/ground_truth
+        # print('{:.8f}'.format(error), end=' ')
+        res.append(error <= ERR_THRESHOLD)
+    # print('\n')
     accuracy = sum(res) / len(res)
 
     return accuracy
@@ -81,9 +84,9 @@ def train(model, trainset, train_labels):
     # training loop to train a model 
     max_val_acc = 0.0
     best_model = model
-    epochs = 50
+    epochs = 100
     criterion = torch.nn.MSELoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=1e-2)
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
     print("before training:", model)
 
     # train the model

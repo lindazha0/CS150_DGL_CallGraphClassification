@@ -8,7 +8,7 @@ from torch_geometric.data import Data
 import torch, time, csv
 from timer import time_limit, TimeoutException
 
-GED_TIME_FILE = 'times_for_GED_sbatch_10.csv'
+GED_TIME_FILE = 'times_for_GED_sbatch_1kTest.csv'
 GED_TIME_LIMIT = 10 * 60 # unit: seconds
 
 def custom_node_match(node1, node2):
@@ -30,7 +30,7 @@ def graph_edit_distance(G1, G2):
     begin = time.time()
     nx_G1 = to_networkx(G1, node_attrs = ['x'], to_undirected=False)
     nx_G2 = to_networkx(G2, node_attrs = ['x'], to_undirected=False)
-    print(f"calculate dist for graphs with {nx_G1.number_of_nodes()} and {nx_G2.number_of_nodes()} nodes")
+    # print(f"calculate dist for graphs with {nx_G1.number_of_nodes()} and {nx_G2.number_of_nodes()} nodes")
 
     # for v in nx.optimize_graph_edit_distance(nx_G1, nx_G2, node_match=custom_node_match):
         # ged = v
@@ -47,7 +47,7 @@ def graph_edit_distance(G1, G2):
     with open(GED_TIME_FILE, 'a', encoding='UTF8', newline='') as f:
         writer = csv.writer(f)
         writer.writerow([nx_G1.number_of_nodes(), nx_G2.number_of_nodes(),elapsed, elapsed_format, ged])
-    print(f"Time elapsed: {elapsed_format}")
+    # print(f"Time elapsed: {elapsed_format}")
 
     return ged
 

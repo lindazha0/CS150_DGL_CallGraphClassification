@@ -4,15 +4,15 @@ import experiments as exp
 
 TIME_CSV_PATH = "times_for_GED_sbatch_1k.csv"
 DATASET_SIZE = 1000  # process labels for 1k dataset
-GENERATE_LABELS = False
+GENERATE_LABELS = True
 
 # reconstructe labels as pt files from csv
 def main():
     # load the dataset
     data = pd.read_csv(TIME_CSV_PATH)
-    print(data.head())
-    print(data.shape)
-    print(data.columns)
+    # print(data.head())
+    print("csv shape: ", data.shape)
+    print("columns: ", data.columns)
     print(f"...describing time_sec...")
     print(data["time_sec"].dtype)
     print(data["time_sec"].describe())
@@ -28,7 +28,8 @@ def main():
 
     # if train labels already existed, skip, otherwise generate
     train_labels_len = min(data.shape[0], train_len)
-    train_labels_name = str(train_labels_len)+exp.TRAIN_LABELS[2:]
+    train_labels_len = exp.NUM_LABELS if exp.NUM_LABELS > 0 else train_labels_len
+    train_labels_name = str(train_labels_len)+exp.TRAIN_LABELS[3:]
     if not os.path.exists(os.path.join(exp.DATA_DIR, train_labels_name)):
         train_labels = []
         for i in range(train_labels_len):
