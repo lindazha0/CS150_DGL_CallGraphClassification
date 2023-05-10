@@ -4,35 +4,31 @@ import numpy as np
 from CallGraphDataset import CallGraphDataset
 from sklearn.model_selection import train_test_split
 from train import train, sliced_wasserstein_distance, ERR_THRESHOLD
-from sklearn.metrics import f1_score
 from model import GNN
 
 TRAIN = False
 NUM_LABELS = 400 # specify the number of labels to use, as well as the number of graphs to load
-DATASET_NAME = "10Dataset.pkl"
+DATASET_NAME = "1kDataset.pkl" # fixed by default
 
-TRAINSET_NAME = "1kTrainset.pkl"
-TESTSET_NAME = "1kTestset.pkl"
-TRAIN_LABELS = "400_TrainLabels.pt"
+TRAINSET_NAME = "10kTrainset.pkl"
+TESTSET_NAME = "10kTestset.pkl"
+TRAIN_LABELS = "4k_TrainLabels_head_tail.pt"
 # TEST_LABELS = TRAIN_LABELS
-TEST_LABELS = "100_TestLabels.pt"
+TEST_LABELS = "1k_TestLabels_head_tail.pt"
 
 MODEL_PT_NAME = "500_128_GATv2_Model.pt"
 
 DATA_DIR = "../data/preloaded/"
 MODEL_PT_PATH = "../models/"
 
-
-def load_dataset(num_files=1, num_graphs=10):
+def load_dataset(num_files=1, num_graphs=1000):
     """
     Load the dataset from the preprocessed files
     args:
         file_num: the number of files to load
         num_graphs: the number of graphs to load from each file
     """
-    DATASET = os.path.join(DATA_DIR, DATASET_NAME)
-    TRAINSET = os.path.join(DATA_DIR, TRAINSET_NAME)
-    TESTSET = os.path.join(DATA_DIR, TESTSET_NAME)
+    DATASET = os.path.join(DATA_DIR, DATASET_NAME) if num_graphs==1000 else os.path.join(DATA_DIR, f"{num_graphs//1000}kDataset.pkl")
     if not os.path.exists(DATASET):
         print(f"{DATASET} not existed, constructing from preprocessed call graphs...")
         try:
@@ -41,6 +37,7 @@ def load_dataset(num_files=1, num_graphs=10):
             print("Failed to load the dataset")
             raise Exception
         with open(DATASET, "wb") as f:
+            # save the dataset
             pickle.dump(dataset, f)
         print(f"{DATASET} saved")
     else:
@@ -48,16 +45,9 @@ def load_dataset(num_files=1, num_graphs=10):
         with open(DATASET, "rb") as f:
             dataset = pickle.load(f)
 
-    # split the dataset into trainset and testset
-    trainset, testset = train_test_split(dataset, train_size=0.8)
-    with open(TRAINSET, "wb") as f:
-        pickle.dump(trainset, f)
-    with open(TESTSET, "wb") as f:
-        pickle.dump(testset, f)
+    return dataset
 
-    return trainset, testset
-
-def load_train_test_set():
+def load_train_test_set(num_graphs=1000):
     """
     Load the trainset and testset from the preprocessed files
     """
@@ -66,6 +56,15 @@ def load_train_test_set():
 
     if not os.path.exists(TRAINSET) or not os.path.exists(TESTSET):
         print(f"{TRAINSET} not existed, loading dataset...")
+        # split the dataset into trainset and testset
+        dataset = load_dataset(num_graphs=num_graphs)
+        trainset, testset = train_test_split(dataset, train_size=0.8)
+
+        # save the trainset and testset
+        with open(TRAINSET, "wb") as f:
+            pickle.dump(trainset, f)
+        with open(TESTSET, "wb") as f:
+            pickle.dump(testset, f)
         return load_dataset()
     else:
         print(f"{TRAINSET} loaded")
@@ -74,7 +73,7 @@ def load_train_test_set():
         print(f"{TESTSET} loaded")
         with open(TESTSET, "rb") as f:
             testset = pickle.load(f)
-        return trainset, testset
+    return trainset, testset
 
 def load_train_test_labels():
     """

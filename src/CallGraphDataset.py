@@ -8,8 +8,10 @@ class CallGraphDataset(InMemoryDataset):
     def __init__(self, file_num=1, graph_num=1000, root=None, transform=None, pre_transform=None):
         super(CallGraphDataset, self).__init__(root, transform, pre_transform)
         data_list = call_graph_dataset(file_num, graph_num)
-        # print(f"Loaded {len(data_list)} graphs with type {type(data_list[0])}")
         self.data, self.slices = self.collate(data_list)
+        # print(f"Loaded {len(data_list)} graphs with type {type(data_list[0])}")
+        # print(f"Loaded {len(self.data)} graphs with type {type(self.data)}")
+        # print(f"Loaded {len(self.slices)} slices with type {type(self.slices)}")
 
     def _download(self):
         pass

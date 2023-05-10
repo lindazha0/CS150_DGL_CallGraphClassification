@@ -8,7 +8,7 @@ from torch_geometric.data import Data
 import torch, time, csv
 from timer import time_limit, TimeoutException
 
-GED_TIME_FILE = 'times_for_GED_sbatch_1kTest.csv'
+GED_TIME_FILE = 'times_for_GED_sbatch_10k.csv'
 GED_TIME_LIMIT = 10 * 60 # unit: seconds
 
 def custom_node_match(node1, node2):

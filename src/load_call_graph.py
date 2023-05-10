@@ -1,10 +1,13 @@
 import os
-import misc as c
 from collections import defaultdict
+import pickle
 
 # for pytorch geometric
 import torch
 from torch_geometric.data import Data
+
+
+PKL_FOLDER = os.path.join(os.path.join('..', 'data'), 'graphs_v2')
 
 def to_pyg_graph(graph):
     """
@@ -23,19 +26,39 @@ def to_pyg_graph(graph):
     graph = Data(x=node_features, edge_index=edge_list)
     return graph
 
-def call_graph_dataset(num_files=1, num_graphs=1000):
+def call_graph_dataset(num_files=1, num_graphs=1000, describe=False):
     """
     Load call graphs from pkl files as a list of pyg graphs
     args:
         num_files: number of files to load (default: 1)
     """
     # get list of graphs from pkl files
-    files = [e for e in os.scandir(os.path.join(c.DATA_FOLDER, c.GRAPHS_V2)) if e.is_file() and e.name.endswith('.pkl')]
+    files = [e for e in os.scandir(PKL_FOLDER) if e.is_file() and e.name.endswith('.pkl')]
 
     # loop over each pkl file as graphs
     graph_list = []
+    if num_files == 1:
+        files = [files[5]]
     for f in files[:num_files]:
-        graphs = c.read_result_object(f.path) # [tracedataList, edgeList, edgefeatures]
+        # form: [tracedataList, edgeList, edgefeatures]
+        graphs = pickle.load(open(f.path, "rb"))
+
+        # for debugging
+        if describe:
+            print(f"Reading graphs from {f.name}")
+            print(type(graphs))
+            print(len(graphs))
+
+                # read graphs[0]
+            graph = graphs[0]
+            print(f"Reading first graph, with {len(graph.nodefeatures)} nodes and {len(graph.edgelist)} edges")
+            print(type(graph))
+            print(graph)
+            print(graph.edgelist)
+            print(graph.nodefeatures)
+            print(graph.trace)
+
+        num_graphs = min(num_graphs, len(graphs))
         for g in graphs[:num_graphs]:
             # print(f"Reading graph with {len(g.nodefeatures)} nodes and {len(g.edgelist)} edges")
             # convert to pyg graph
@@ -45,25 +68,7 @@ def call_graph_dataset(num_files=1, num_graphs=1000):
 
 def main():
     # get list of graphs from pkl files
-    files = [e for e in os.scandir(os.path.join(c.DATA_FOLDER, c.GRAPHS_V2)) if e.is_file() and e.name.endswith('.pkl')]
-
-    # loop over each pkl file as graphs
-    num_files = 1
-    
-    for f in files[:num_files]:
-        print(f"Reading graphs from {f.name}")
-        graphs = c.read_result_object(f.path) # [tracedataList, edgeList, edgefeatures]
-        print(type(graphs))
-        print(len(graphs))
-
-        # read graphs[0]
-        graph = graphs[0]
-        print(f"Reading first graph, with {len(graph.nodefeatures)} nodes and {len(graph.edgelist)} edges")
-        print(type(graph))
-        print(graph)
-        print(graph.edgelist)
-        print(graph.nodefeatures)
-        print(graph.trace)
+    graph_list = call_graph_dataset(num_files=1, num_graphs=10000, describe=True)
 
     return
 
