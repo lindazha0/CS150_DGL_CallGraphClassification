@@ -2,7 +2,7 @@ import pandas as pd
 import torch, os
 import experiments as exp
 
-TIME_CSV_PATH = "times_for_GED_sbatch_1kTest.csv"
+TIME_CSV_PATH = "times_for_GED_sbatch_10k.csv"
 DATASET_SIZE = 1000  # process labels for 1k dataset
 GENERATE_LABELS = False
 

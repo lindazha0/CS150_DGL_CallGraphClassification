@@ -21,7 +21,7 @@ python /cluster/home/czhao07/CS150_DGL_CallGraphClassification/src/generate_more
 
 
 # srun --time=00-02:00:00 -p preempt --mem=8g --pty bash
-# srun --time=00-02:00:00 -p interactive --mem=8g --pty bash
+# srun --time=00-01:00:00 -p interactive --mem=8g --pty bash
 # use ls *.csv -lrt to track latest changes in the directory
 # use sinfo -N -l | grep batch to find available nodes
 # only `mixed` or `idle` nodes are available for job submission
