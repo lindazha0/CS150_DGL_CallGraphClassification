@@ -6,17 +6,18 @@ from sklearn.model_selection import train_test_split
 from train import train, sliced_wasserstein_distance, ERR_THRESHOLD
 from model import GNN
 
-TRAIN = False
+TRAIN = True
 NUM_LABELS = 400 # specify the number of labels to use, as well as the number of graphs to load
 DATASET_NAME = "1kDataset.pkl" # fixed by default
 
-TRAINSET_NAME = "10kTrainset.pkl"
-TESTSET_NAME = "10kTestset.pkl"
-TRAIN_LABELS = "4k_TrainLabels_head_tail.pt"
+TRAINSET_NAME = "1kTrainset.pkl"
+TESTSET_NAME = "1kTestset.pkl"
+TRAIN_LABELS = "400_TrainLabels.pt"
 # TEST_LABELS = TRAIN_LABELS
-TEST_LABELS = "1k_TestLabels_head_tail.pt"
+TEST_LABELS = "100_TestLabels.pt"
 
-MODEL_PT_NAME = "500_128_GATv2_Model.pt"
+MODEL_TYPE = "GATv2"
+MODEL_PT_NAME = f"500_128_{MODEL_TYPE}_Model.pt"
 
 DATA_DIR = "../data/preloaded/"
 MODEL_PT_PATH = "../models/"
@@ -75,15 +76,16 @@ def load_train_test_set(num_graphs=1000):
             testset = pickle.load(f)
     return trainset, testset
 
-def load_train_test_labels():
+def load_train_test_labels(train_name=TRAIN_LABELS, test_name=TEST_LABELS):
     """
     Load the trainset and testset from the preprocessed files
     """
+    train_path, test_path = os.path.join(DATA_DIR, train_name), os.path.join(DATA_DIR, test_name)
     if not os.path.exists(os.path.join(DATA_DIR, TRAIN_LABELS)):
         print(f"{TRAIN_LABELS} not existed, generating...")
         main()
-    train_labels = torch.load(os.path.join(DATA_DIR, TRAIN_LABELS))
-    test_labels = torch.load(os.path.join(DATA_DIR, TEST_LABELS))
+    train_labels = torch.load(train_path)
+    test_labels = torch.load(test_path)
     return train_labels, test_labels
 
 def main():
@@ -91,6 +93,7 @@ def main():
     # load the dataset
     trainset, testset = load_train_test_set()
     train_y, test_y = load_train_test_labels()
+    train_y_ht, test_y_ht = load_train_test_labels(train_name="400_TrainLabels_head_tail.pt", test_name="100_TestLabels_head_tail.pt")
 
     # for unit test of 50 in training set
     # train_size = int(NUM_LABELS*0.8)
@@ -98,19 +101,20 @@ def main():
     # train_y, test_y = train_y[:train_size], train_y[train_size:]
     print(f"trainset size: {len(trainset)},\ntestset size: {len(testset)}")
     print(f"train_y size: {len(train_y)},\ntest_y size: {len(test_y)}")
+    print(f"train_y_ht size: {len(train_y_ht)},\ntest_y_ht size: {len(test_y_ht)}")
 
     # load or learn an optimal model
     MODEL_PT = os.path.join(MODEL_PT_PATH, MODEL_PT_NAME)
     model = GNN(num_features=1, 
             out_dim=20, 
             hid_dim=128, 
-            num_layers=5, layer_type='GATv2Conv')
+            num_layers=5, layer_type=f'{MODEL_TYPE}Conv')
     if os.path.exists(MODEL_PT):
         print(f"{MODEL_PT} existed, loading model...")
         model.load_state_dict(torch.load(MODEL_PT))
     if TRAIN:
         print("...Training...")
-        model, val_acc = train(model, trainset, train_y)
+        model, val_acc = train(model, trainset, train_y, train_y_ht)
 
         # save best model
         print(f"saving model...")
@@ -127,6 +131,19 @@ def main():
         if ground_truth <= 0:
             continue
         g1, g2 = testset[i*2], testset[i*2+1]
+        embed_g1, embed_g2 = model(g1.x, g1.edge_index), model(g2.x, g2.edge_index)
+        similar_of_emb = sliced_wasserstein_distance(embed_g1, embed_g2)
+        error = abs(similar_of_emb - ground_truth)/ground_truth
+        # print(f"test-{i}: G1 {g1}, G2 {g2}, GED {ground_truth}, EMD {similar_of_emb}, error {error}")
+        # print(error)
+        scores.append(error <= ERR_THRESHOLD)
+
+    # head and tail
+    for i in range(len(test_y_ht)):
+        ground_truth = test_y_ht[i]
+        if ground_truth <= 0:
+            continue
+        g1, g2 = testset[i], testset[len(test_y_ht)-1-i]
         embed_g1, embed_g2 = model(g1.x, g1.edge_index), model(g2.x, g2.edge_index)
         similar_of_emb = sliced_wasserstein_distance(embed_g1, embed_g2)
         error = abs(similar_of_emb - ground_truth)/ground_truth

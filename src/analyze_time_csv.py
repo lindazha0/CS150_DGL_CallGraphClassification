@@ -2,14 +2,15 @@ import pandas as pd
 import torch, os
 import experiments as exp
 
-TIME_CSV_PATH = "times_for_GED_sbatch_10k.csv"
+TIME_CSV_PATHS = ["times_for_GED_sbatch_1k_head_tail_pairs.csv", "times_for_GED_sbatch_1k.csv"]
 DATASET_SIZE = 1000  # process labels for 1k dataset
 GENERATE_LABELS = False
 
 # reconstructe labels as pt files from csv
 def main():
     # load the dataset
-    data = pd.read_csv(TIME_CSV_PATH)
+    # data = pd.read_csv(TIME_CSV_PATH)
+    data = pd.concat([pd.read_csv(path) for path in TIME_CSV_PATHS], ignore_index=True)
     # print(data.head())
     print("csv shape: ", data.shape)
     print("columns: ", data.columns)
@@ -17,7 +18,7 @@ def main():
     print(data["time_sec"].dtype)
     print(data["time_sec"].describe())
     print(f"...describing distance...")
-    print(data["distance"].describe())
+    print(data[data["distance"]>0].describe())
     mask = data["distance"] == -1
     print(f"Number of graphs with -1 distance: {mask.sum()}/{data.shape[0]}")
 

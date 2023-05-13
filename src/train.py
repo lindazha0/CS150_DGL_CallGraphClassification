@@ -70,7 +70,7 @@ def validate(model, valset, val_labels):
 
     return accuracy
 
-def train(model, trainset, train_labels):
+def train(model, trainset, train_labels, train_labels_head_tail):
     """
     A training function that trains a GNN model 
 
@@ -86,7 +86,7 @@ def train(model, trainset, train_labels):
     best_model = model
     epochs = 50
     criterion = torch.nn.MSELoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
     print("before training:", model)
 
     # train the model
@@ -109,6 +109,26 @@ def train(model, trainset, train_labels):
             # print(f"embeddings similarities: {similar_of_emb}, {similar_of_emb.dtype}")
             ground_truth = train_y[i]
             # print(f"ground truth similarities: {ground_truth}, {ground_truth.dtype}")
+
+            # gradient descent
+            loss = criterion(similar_of_emb, ground_truth)
+            loss.backward()
+            optimizer.step()
+
+        # head and tail
+        for i in range(len(train_labels_head_tail)):
+            ground_truth = train_labels_head_tail[i]
+            if ground_truth <= 0:
+                continue
+            model.train()
+
+            # clear the gradients
+            optimizer.zero_grad()
+
+            # forward pass
+            g1, g2 = trainset[i], trainset[len(train_labels_head_tail)-1-i]
+            embeddings_g1, embeddings_g2 = model(g1.x, g1.edge_index), model(g2.x, g2.edge_index)
+            similar_of_emb = sliced_wasserstein_distance(embeddings_g1, embeddings_g2)
 
             # gradient descent
             loss = criterion(similar_of_emb, ground_truth)
